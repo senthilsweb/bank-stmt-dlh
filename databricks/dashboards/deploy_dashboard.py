@@ -29,7 +29,7 @@ def main() -> int:
     NAME = f"{S['company_name']} Finance"
     catalog = os.environ.get("DATABRICKS_CATALOG") or S["catalog"]
     wh = os.environ["DATABRICKS_HTTP_PATH"].rstrip("/").split("/")[-1]
-    body = (ROOT / "databricks" / "dashboards" / "bank-etl.lvdash.json").read_text().replace("__CATALOG__", catalog).replace("__COMPANY__", S["company_name"])
+    body = (ROOT / "databricks" / "dashboards" / "bank-stmt-dlh.lvdash.json").read_text().replace("__CATALOG__", catalog).replace("__COMPANY__", S["company_name"])
     json.loads(body)
     api = lambda m, p, **kw: httpx.request(m, f"{host}{p}", headers=h, timeout=90, **kw)
     existing = None

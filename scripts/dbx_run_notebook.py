@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main(name: str) -> int:
     load_dotenv(ROOT / ".env")
-    WS = f"/Users/{os.environ['DATABRICKS_USER']}/bank-etl/jobs"
+    WS = f"/Users/{os.environ['DATABRICKS_USER']}/bank-stmt-dlh/jobs"
     host = os.environ["DATABRICKS_HOST"].strip().rstrip("/")
     host = host if host.startswith("http") else "https://" + host
     h = {"Authorization": f"Bearer {os.environ['DATABRICKS_TOKEN']}"}

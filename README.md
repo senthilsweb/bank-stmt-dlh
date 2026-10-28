@@ -1,4 +1,4 @@
-# bank-etl
+# bank-stmt-dlh
 
 Turns bank statement PDFs (HDFC Bank current account layout) into a reconciled ledger with category,
 recurring-payment, cash and runway reports. Runs on a laptop with DuckDB, or as a scheduled Databricks job
@@ -66,14 +66,14 @@ to that bucket.
 
 1. Fill the `DATABRICKS_*` and `MINIO_*` values in `.env`, and set `statement_source: minio`,
    `minio_bucket` and `catalog` in `config/settings.yaml`.
-2. Create the catalog by hand (`CREATE CATALOG bank_etl;` or your name), then `make db-init` (schemas).
+2. Create the catalog by hand (`CREATE CATALOG bank_stmt_dlh;` or your name), then `make db-init` (schemas).
 3. `make secrets` copies the PDF password, Jev key and bucket keys into the secret scope.
-4. `make deploy` uploads code, config, SQL and notebooks to `/Users/<DATABRICKS_USER>/bank-etl`.
+4. `make deploy` uploads code, config, SQL and notebooks to `/Users/<DATABRICKS_USER>/bank-stmt-dlh`.
 5. `make upload` copies the PDFs from `STATEMENTS_DIR` to the bucket (`WEEKLY=1` for weekly statements,
    which go under `statements/weekly/`) and starts the job. `make etl` creates or updates the jobs.
 6. `make dashboard` generates and publishes the dashboard.
 
-Job `bank-etl` runs daily at midnight IST: `02` (ingest) -> new data? -> `01` (seed config) -> `03` (gold).
+Job `bank-stmt-dlh` runs daily at midnight IST: `02` (ingest) -> new data? -> `01` (seed config) -> `03` (gold).
 No PDF is kept in Databricks; each is downloaded to temporary disk, parsed and dropped.
 
 | Notebook | What it does |

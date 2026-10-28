@@ -11,7 +11,7 @@
 # MAGIC line is written to `silver.transaction_sources`; the second and later ones are tagged `is_duplicate` and never reach `silver.transactions` twice.
 # MAGIC The monthly text replaces a weekly one. Logic lives in `src/dedupe.py` (unit tested).
 # MAGIC
-# MAGIC **Reads.** SharePoint or MinIO, chosen in `config/settings.yaml` (secret scope `bank-etl`). **Writes.** `bronze.statement_files`, `bronze.raw_lines`, `silver.statements`, `silver.transactions`, `silver.transaction_sources`, `silver.quarantine`.
+# MAGIC **Reads.** SharePoint or MinIO, chosen in `config/settings.yaml` (secret scope `bank-stmt-dlh`). **Writes.** `bronze.statement_files`, `bronze.raw_lines`, `silver.statements`, `silver.transactions`, `silver.transaction_sources`, `silver.quarantine`.
 # MAGIC
 # MAGIC **Tells the job whether to continue.** Sets task value `run_gold` to `true` only when there are new files, or when the job was started with `force=true`
 # MAGIC (`make run`, used after a config or code change). Otherwise the job stops here and nothing is rebuilt.

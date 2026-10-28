@@ -1,0 +1,49 @@
+site_name: bank-stmt-dlh
+site_description: Bank statement PDFs to a reconciled ledger and a Databricks lakehouse. Deterministic first.
+site_url: https://www.senthilsweb.com/bank-stmt-dlh/
+repo_url: https://github.com/senthilsweb/bank-stmt-dlh
+repo_name: senthilsweb/bank-stmt-dlh
+edit_uri: edit/main/docs/
+docs_dir: docs
+exclude_docs: |
+  README.public.md
+  artifacts/
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.highlight
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Configuration: configuration.md
+  - Databricks lakehouse: databricks.md
+  - Data model: data-model.md
+  - Cookbooks:
+      - SharePoint statement source: cookbook/sharepoint-source-setup.md
+      - Weekly report mail (Graph): cookbook/graph-mail-setup.md
+  - Process: process.md

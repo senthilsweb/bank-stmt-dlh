@@ -2,9 +2,9 @@
 # MAGIC %md
 # MAGIC # B0 feasibility: can serverless Databricks run the bank ETL?
 # MAGIC
-# MAGIC **Why this notebook exists.** The plan keeps raw statement PDFs only in MinIO (bucket `bank-etl`) and reads them from Databricks on demand. Before building on that, this one-off test checked three things on Free Edition serverless compute:
+# MAGIC **Why this notebook exists.** The plan keeps raw statement PDFs only in MinIO (bucket `bank-stmt-dlh`) and reads them from Databricks on demand. Before building on that, this one-off test checked three things on Free Edition serverless compute:
 # MAGIC 1. `pdfplumber` can be installed with `%pip`.
-# MAGIC 2. MinIO is reachable from Databricks over the internet, with the key from secret scope `bank-etl`.
+# MAGIC 2. MinIO is reachable from Databricks over the internet, with the key from secret scope `bank-stmt-dlh`.
 # MAGIC 3. A real statement can be downloaded to temporary disk, opened with the PDF password from the secret scope, and parsed.
 # MAGIC
 # MAGIC **Result (2026-10-18).** All three passed. January statement: 3 pages, 28 transaction lines, same as the local parser. The temporary file is deleted after parsing.

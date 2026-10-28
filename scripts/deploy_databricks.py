@@ -2,7 +2,7 @@
 
     python scripts/deploy_databricks.py
 
-Workspace layout under /Users/<DATABRICKS_USER>/bank-etl: src/ config/ databricks/sql/ (plain files, importable or readable
+Workspace layout under /Users/<DATABRICKS_USER>/bank-stmt-dlh: src/ config/ databricks/sql/ (plain files, importable or readable
 by the notebooks) and notebooks/ (Databricks notebooks). Prints names only.
 """
 from __future__ import annotations
@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main() -> int:
     load_dotenv(ROOT / ".env")
-    WS = f"/Users/{os.environ['DATABRICKS_USER']}/bank-etl"
+    WS = f"/Users/{os.environ['DATABRICKS_USER']}/bank-stmt-dlh"
     host = os.environ["DATABRICKS_HOST"].strip().rstrip("/")
     host = host if host.startswith("http") else "https://" + host
     h = {"Authorization": f"Bearer {os.environ['DATABRICKS_TOKEN']}"}

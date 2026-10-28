@@ -29,7 +29,7 @@ def main(argv: list[str]) -> int:
     if tok.status_code != 200:
         print("token failed: HTTP", tok.status_code)
         return 1
-    msg = {"message": {"subject": "bank-etl mail test", "body": {"contentType": "Text", "content": "Test message from the bank-etl weekly cash report setup. No data, nothing to do."},
+    msg = {"message": {"subject": "bank-stmt-dlh mail test", "body": {"contentType": "Text", "content": "Test message from the bank-stmt-dlh weekly cash report setup. No data, nothing to do."},
                        "toRecipients": [{"emailAddress": {"address": to}}],
                        **({"replyTo": [{"emailAddress": {"address": e["MAIL_REPLY_TO"].strip()}}]} if e.get("MAIL_REPLY_TO") else {})},
            "saveToSentItems": True}

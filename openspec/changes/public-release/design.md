@@ -6,14 +6,14 @@
 |---|---|---|---|
 | Workspace user | `DATABRICKS_USER` (`.env`) | notebook path | required |
 | Alert email | `ALERT_EMAIL` (`.env`) | job spec | `DATABRICKS_USER` |
-| Catalog | `DATABRICKS_CATALOG` (`.env`) | `settings.catalog` | `bank_etl` |
-| Secret scope | `settings.secret_scope` | same | `bank-etl` |
-| MinIO bucket, prefix | `MINIO_BUCKET` (`.env`) for upload | `settings.minio_bucket`, `settings.minio_prefix` | `bank-etl`, `statements/` |
+| Catalog | `DATABRICKS_CATALOG` (`.env`) | `settings.catalog` | `bank_stmt_dlh` |
+| Secret scope | `settings.secret_scope` | same | `bank-stmt-dlh` |
+| MinIO bucket, prefix | `MINIO_BUCKET` (`.env`) for upload | `settings.minio_bucket`, `settings.minio_prefix` | `bank-stmt-dlh`, `statements/` |
 | Company name | `settings.company_name` | same | `ConceptLabs` |
 | Logos | `assets/logo.png`, `assets/logo-white.png` | same | shipped |
 
 `src/settings.py` reads `config/settings.yaml` relative to its own file, so it works on a laptop and under
-`/Workspace/Users/<user>/bank-etl/src`. A notebook derives `BASE` from
+`/Workspace/Users/<user>/bank-stmt-dlh/src`. A notebook derives `BASE` from
 `dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath()` (two levels up from
 `notebooks/<name>` or `jobs/<name>`), then adds `BASE/src` to `sys.path`.
 

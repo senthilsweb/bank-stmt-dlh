@@ -37,7 +37,7 @@ sharepoint:
   folders:                          # one folder per year; add OPS2027 when it starts
     - <path to the statements folder>/01 MONTHLY STATEMENTS   # weekly statements are skipped for now
 ```
-Secrets (scope `bank-etl`): `sp_tenant_id`, `sp_client_id`, `sp_client_secret`. `.env.sample` gets `SP_DRIVE_ID`, `SP_FOLDER_ID`, `SP_TENANT_ID`, `SP_CLIENT_ID`, `SP_CLIENT_SECRET`; the non-secret values (`SP_SITE_HOST`, `SP_SITE_PATH`, `SP_LIBRARY`, `SP_FOLDER`) are already in the local `.env`.
+Secrets (scope `bank-stmt-dlh`): `sp_tenant_id`, `sp_client_id`, `sp_client_secret`. `.env.sample` gets `SP_DRIVE_ID`, `SP_FOLDER_ID`, `SP_TENANT_ID`, `SP_CLIENT_ID`, `SP_CLIENT_SECRET`; the non-secret values (`SP_SITE_HOST`, `SP_SITE_PATH`, `SP_LIBRARY`, `SP_FOLDER`) are already in the local `.env`.
 
 ## SharePoint and Entra setup (one time)
 
@@ -50,7 +50,7 @@ give the app read on the *whole site*. Use the folder-level permission instead:
 `Files.SelectedOperations.Selected` (Graph, Application) plus a `read` grant on that one folder.
 If it turns out not to work in this tenant, fall back to a dedicated site (`Sites.Selected`) and move the statements there.
 
-1. **App registration.** Entra admin center -> App registrations -> New: `bank-etl-reader`, single tenant, no redirect URI. Note *Tenant ID* and *Client ID* (-> `.env`).
+1. **App registration.** Entra admin center -> App registrations -> New: `bank-stmt-dlh-reader`, single tenant, no redirect URI. Note *Tenant ID* and *Client ID* (-> `.env`).
 2. **Secret.** Certificates & secrets -> New client secret (12 months). Copy the *Value* at once into `.env` (`SP_CLIENT_SECRET`). Never paste it in chat or git.
 3. **Permission.** API permissions -> Add -> Microsoft Graph -> *Application* permissions -> `Files.SelectedOperations.Selected` -> **Grant admin consent**.
 4. **Find the ids** (Graph Explorer, signed in as admin; consent to `Sites.Read.All` / `Files.Read.All` when asked):
@@ -59,10 +59,10 @@ If it turns out not to work in this tenant, fall back to a dedicated site (`Site
    - `GET /v1.0/drives/{drive-id}/root:/<path to the statements folder>/01 MONTHLY STATEMENTS` -> folder `id` (`item-id`)
 5. **Grant the app that one folder** (admin, one time):
    `POST /v1.0/drives/{drive-id}/items/{item-id}/permissions` body
-   `{"roles":["read"],"grantedTo":{"application":{"id":"<client-id>","displayName":"bank-etl-reader"}}}`
+   `{"roles":["read"],"grantedTo":{"application":{"id":"<client-id>","displayName":"bank-stmt-dlh-reader"}}}`
    (needs `Files.ReadWrite.All` consent in Graph Explorer for this call). Next year, repeat for the `OPS2027` monthly folder.
 6. **Check** (bolt S0 script): token OK, list shows the 10 PDFs, a download works, a file outside the folder returns 403.
-7. **Secrets to Databricks:** `sp_*` into scope `bank-etl` (script, values from `.env`).
+7. **Secrets to Databricks:** `sp_*` into scope `bank-stmt-dlh` (script, values from `.env`).
 
 Alternative if admin consent is a problem: delegated sign-in (device code) with a refresh token. Not recommended: tokens expire, a person's account becomes a job dependency.
 

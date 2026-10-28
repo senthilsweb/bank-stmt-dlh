@@ -32,7 +32,7 @@ The PDF password SHALL come from a secret scope and SHALL NOT appear in any log,
 
 ### Requirement: MinIO is the only home of raw files
 
-Raw statement PDFs SHALL be stored in MinIO bucket `bank-etl` only. The pipeline SHALL read them from MinIO and SHALL NOT store a copy in a Databricks volume, table or workspace file.
+Raw statement PDFs SHALL be stored in MinIO bucket `bank-stmt-dlh` only. The pipeline SHALL read them from MinIO and SHALL NOT store a copy in a Databricks volume, table or workspace file.
 
 #### Scenario: MinIO unreachable
 - **WHEN** MinIO cannot be reached during discover

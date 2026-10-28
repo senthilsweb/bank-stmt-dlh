@@ -31,7 +31,7 @@ try:
     t = requests.post(f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", timeout=30, data={
         "grant_type": "client_credentials", "client_id": cid, "client_secret": csec, "scope": "https://graph.microsoft.com/.default"})
     report.append(f"token: HTTP {t.status_code}")
-    msg = {"message": {"subject": "bank-etl M0 test from Databricks", "body": {"contentType": "Text",
+    msg = {"message": {"subject": "bank-stmt-dlh M0 test from Databricks", "body": {"contentType": "Text",
            "content": "Test message sent by a Databricks serverless job (bolt M0). No data, nothing to do."},
            "toRecipients": [{"emailAddress": {"address": to}}]}, "saveToSentItems": True}
     r = requests.post(f"https://graph.microsoft.com/v1.0/users/{sender}/sendMail", headers={"Authorization": "Bearer " + t.json()["access_token"]}, json=msg, timeout=30)

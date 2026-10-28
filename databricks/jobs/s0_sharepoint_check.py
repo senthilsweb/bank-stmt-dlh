@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC **Why this notebook exists.** The `sharepoint-source` change moves the raw PDFs from MinIO to a SharePoint folder, read through Microsoft Graph. Before building the reader, this one-off checks from serverless compute that:
 # MAGIC 1. the Microsoft sign-in host and Graph are reachable (Free Edition may restrict outbound domains);
-# MAGIC 2. the app token works with the keys in secret scope `bank-etl`;
+# MAGIC 2. the app token works with the keys in secret scope `bank-stmt-dlh`;
 # MAGIC 3. the monthly folder lists PDFs and one downloads (the download host is a SharePoint domain);
 # MAGIC 4. the app sees nothing outside the granted folder.
 # MAGIC

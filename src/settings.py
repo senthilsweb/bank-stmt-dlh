@@ -12,9 +12,9 @@ import yaml
 
 CONFIG = Path(__file__).resolve().parent.parent / "config" / "settings.yaml"
 DEFAULTS = {
-    "catalog": "bank_etl",
-    "secret_scope": "bank-etl",
-    "minio_bucket": "bank-etl",
+    "catalog": "bank_stmt_dlh",
+    "secret_scope": "bank-stmt-dlh",
+    "minio_bucket": "bank-stmt-dlh",
     "minio_prefix": "statements/",
     "statement_source": "sharepoint",
     "company_name": "ConceptLabs",

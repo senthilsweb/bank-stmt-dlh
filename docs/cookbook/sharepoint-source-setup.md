@@ -9,7 +9,7 @@ Design and reasons: `openspec/changes/sharepoint-source/design.md`.
 | SharePoint host | `<tenant>.sharepoint.com` (root site, no `/sites/...` part) |
 | Library | `Shared Documents` |
 | Folder | Grant on `<path to the statements folder>` (covers both sub-folders); the job reads only `01 MONTHLY STATEMENTS`, weekly skipped for now |
-| Entra app | `bank-etl-reader`, single tenant, no redirect URI |
+| Entra app | `bank-stmt-dlh-reader`, single tenant, no redirect URI |
 | Permission | Microsoft Graph, Application, `Files.SelectedOperations.Selected` + read grant on the folder |
 
 Why a folder-level grant: the folder lives in the root site next to other operations documents.
@@ -17,7 +17,7 @@ Why a folder-level grant: the folder lives in the root site next to other operat
 
 ## 1. Create the app
 1. https://entra.microsoft.com -> Entra ID -> App registrations -> **New registration**.
-2. Name `bank-etl-reader`; account type *Single tenant*; no redirect URI; **Register**.
+2. Name `bank-stmt-dlh-reader`; account type *Single tenant*; no redirect URI; **Register**.
 3. On Overview copy **Application (client) ID** and **Directory (tenant) ID**.
 
 ## 2. Create the client secret
@@ -73,7 +73,7 @@ Do not use `/sites/{site-id}/root:/path`; that is a Bad Request. Paths go throug
 `https://graph.microsoft.com/v1.0/drives/{drive-id}/items/{folder-id}/permissions`,
 and the JSON in the **Request body** tab (under the URL bar; a blank tab gives `Empty Payload. JSON content expected`):
 ```json
-{"roles":["read"],"grantedTo":{"application":{"id":"<SP_CLIENT_ID>","displayName":"bank-etl-reader"}}}
+{"roles":["read"],"grantedTo":{"application":{"id":"<SP_CLIENT_ID>","displayName":"bank-stmt-dlh-reader"}}}
 ```
 Use `grantedTo`. The site-style `grantedToIdentities` is rejected on folders with `'grantedTo' must be provided`.
 `id` is the app's **Application (client) ID**, not the object id or tenant id. Success is `201 Created` with
@@ -83,7 +83,7 @@ Use `grantedTo`. The site-style `grantedToIdentities` is rejected on folders wit
 `GET .../drives/{drive-id}/items/{folder-id}/children` -> `01 MONTHLY STATEMENTS` -> `SP_MONTHLY_FOLDER_ID`,
 `02 WEEKLY STATEMENTS` -> `SP_WEEKLY_FOLDER_ID` (saved, not read for now). The job reads only the monthly folder.
 
-**Check a grant:** `GET .../drives/{drive-id}/items/{folder-id}/permissions` lists `bank-etl-reader` with role `read`.
+**Check a grant:** `GET .../drives/{drive-id}/items/{folder-id}/permissions` lists `bank-stmt-dlh-reader` with role `read`.
 **Revoke:** `DELETE .../items/{folder-id}/permissions/{permission-id}` (the `id` from that list).
 **Each new year:** repeat 5.3-5.5 for the new `OPSyyyy` year folder and add its ids.
 

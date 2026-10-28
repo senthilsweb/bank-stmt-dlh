@@ -10,7 +10,7 @@ authentication for it. Graph uses the app's own credentials, the same way the Sh
 | Item | Value |
 |---|---|
 | Sender | `noreply@<your domain>` (`MAIL_SENDER`); replies go to `finance-reports@<your domain>` (`MAIL_REPLY_TO`). Both are shared mailboxes |
-| Entra app | `bank-etl-mailer`, single tenant, no redirect URI. Separate from the read-only SharePoint app |
+| Entra app | `bank-stmt-dlh-mailer`, single tenant, no redirect URI. Separate from the read-only SharePoint app |
 | Permission | Microsoft Graph, **Application**, `Mail.Send`, admin consent |
 | Limit | Exchange application access policy: this app may act only on the sender mailbox |
 
@@ -21,7 +21,7 @@ A shared mailbox needs no licence. Note the full address: it is `MAIL_SENDER`.
 
 ## 2. Create the mailer app
 1. https://entra.microsoft.com -> Entra ID -> App registrations -> **New registration**.
-2. Name `bank-etl-mailer`; *Single tenant*; no redirect URI; **Register**.
+2. Name `bank-stmt-dlh-mailer`; *Single tenant*; no redirect URI; **Register**.
 3. Copy **Application (client) ID** -> `MAIL_CLIENT_ID`. (The tenant id is the same as `SP_TENANT_ID`.)
 4. Certificates & secrets -> **New client secret** (12 or 24 months) -> copy the **Value** -> `MAIL_CLIENT_SECRET`. Set a calendar reminder 30 days before expiry.
 
@@ -39,14 +39,14 @@ Install-Module ExchangeOnlineManagement -Scope CurrentUser   # skip in Cloud She
 Connect-ExchangeOnline
 
 # a security group that holds only the mailboxes the app may send as
-New-DistributionGroup -Name "bank-etl-mailer-scope" -Type Security -Members finance-reports@<domain>,noreply@<domain>
-Get-DistributionGroup bank-etl-mailer-scope | Format-List PrimarySmtpAddress     # note the address
+New-DistributionGroup -Name "bank-stmt-dlh-mailer-scope" -Type Security -Members finance-reports@<domain>,noreply@<domain>
+Get-DistributionGroup bank-stmt-dlh-mailer-scope | Format-List PrimarySmtpAddress     # note the address
 ```
-The group's address uses the default domain, e.g. `bank-etl-mailer-scope@<tenant>.onmicrosoft.com`, not your own domain.
+The group's address uses the default domain, e.g. `bank-stmt-dlh-mailer-scope@<tenant>.onmicrosoft.com`, not your own domain.
 Use that exact address below; `@<your domain>` fails with "identity of the policy scope could not be resolved".
 ```powershell
-New-ApplicationAccessPolicy -AppId <MAIL_CLIENT_ID> -PolicyScopeGroupId bank-etl-mailer-scope@<tenant>.onmicrosoft.com `
-  -AccessRight RestrictAccess -Description "bank-etl-mailer may act only on the finance-reports and noreply mailboxes"
+New-ApplicationAccessPolicy -AppId <MAIL_CLIENT_ID> -PolicyScopeGroupId bank-stmt-dlh-mailer-scope@<tenant>.onmicrosoft.com `
+  -AccessRight RestrictAccess -Description "bank-stmt-dlh-mailer may act only on the finance-reports and noreply mailboxes"
 ```
 Before the policy exists, `Get-ApplicationAccessPolicy` answers "couldn't be found": that means none is set, and `Mail.Send` lets the app send as any mailbox.
 Microsoft is moving to "RBAC for Applications" in Exchange Online for the same scoping; the policy above still works.
@@ -89,4 +89,4 @@ from a serverless job. Expected: HTTP 202 and the mail arrives from the shared m
 ## Later additions
 - Sender decision (2026-10-24): sending as `finance-reports` returned 403 from Graph for a while although `Test-ApplicationAccessPolicy` said Granted. `noreply` worked, so it is the sender and `finance-reports` is the Reply-To.
 - `conceptlabs.com` has SPF but no DKIM or DMARC. Turn on DKIM (Defender portal, Email authentication settings, DKIM; two CNAMEs at the DNS host) and add `v=DMARC1; p=none` to help Gmail trust the mail.
-- Run the real report to the dry-run address with `python scripts/send_test_report.py <sunday>`; the scheduled job is `bank-etl-weekly-cash-report` (see the runbook page).
+- Run the real report to the dry-run address with `python scripts/send_test_report.py <sunday>`; the scheduled job is `bank-stmt-dlh-weekly-cash-report` (see the runbook page).

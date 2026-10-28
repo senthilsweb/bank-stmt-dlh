@@ -1,6 +1,6 @@
 # Design — weekly-cash-report
 
-## Job `bank-etl-weekly-cash-report` (serverless, notebook tasks)
+## Job `bank-stmt-dlh-weekly-cash-report` (serverless, notebook tasks)
 
 | Task | Does |
 |---|---|
@@ -39,7 +39,7 @@ previous business day). Fallback source if serverless cannot reach it: the ECB d
 ## Sending (Microsoft Graph)
 
 `POST https://graph.microsoft.com/v1.0/users/{MAIL_SENDER}/sendMail` with an app token (client credentials,
-`Mail.Send` application permission, separate Entra app `bank-etl-mailer`). Body `contentType: HTML`, two
+`Mail.Send` application permission, separate Entra app `bank-stmt-dlh-mailer`). Body `contentType: HTML`, two
 `fileAttachment` items, `saveToSentItems: true`. Limited to the shared mailbox by an Exchange application access
 policy. Retries on 429/5xx. Setup steps: `docs/cookbook/graph-mail-setup.md`. SMTP AUTH is not used: it needs a
 mailbox password and Microsoft is phasing out basic authentication for it.

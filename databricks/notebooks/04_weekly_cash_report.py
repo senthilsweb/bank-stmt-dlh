@@ -8,7 +8,7 @@
 # MAGIC **Steps.** Pick the week, skip if it was already sent, get one USD/INR rate for the report, build the figures, **save them as an append-only snapshot**, render the email and PDFs **from the
 # MAGIC snapshot**, send through Microsoft Graph, log the send.
 # MAGIC
-# MAGIC **Reads.** `gold.fact_transactions`, `gold.upcoming_payments`, `gold.review_summary`, `silver.statements`, the rate API, secret scope `bank-etl` (`mail_*`, `sp_tenant_id`).
+# MAGIC **Reads.** `gold.fact_transactions`, `gold.upcoming_payments`, `gold.review_summary`, `silver.statements`, the rate API, secret scope `bank-stmt-dlh` (`mail_*`, `sp_tenant_id`).
 # MAGIC **Writes.** `gold.fx_rates`, `gold.weekly_cash_snapshot`, `gold.weekly_cash_snapshot_lines`, `gold.report_log`. **Sends** one email.
 # MAGIC
 # MAGIC **Parameters.** `week_end` (date, blank = the Sunday just ended), `report_force` (true sends again and adds a new snapshot version), `mode` (`dry` = owner only, `live` = the recipient list; blank = secret `mail_mode`).

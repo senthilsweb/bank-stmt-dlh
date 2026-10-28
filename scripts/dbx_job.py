@@ -20,11 +20,11 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
-NAME = "bank-etl"
-REPORT_NAME = "bank-etl-weekly-cash-report"
+NAME = "bank-stmt-dlh"
+REPORT_NAME = "bank-stmt-dlh-weekly-cash-report"
 USER = os.environ["DATABRICKS_USER"]
 ALERT_EMAIL = os.environ.get("ALERT_EMAIL", "").strip() or USER
-WS = f"/Users/{USER}/bank-etl/notebooks"
+WS = f"/Users/{USER}/bank-stmt-dlh/notebooks"
 
 
 def spec() -> dict:

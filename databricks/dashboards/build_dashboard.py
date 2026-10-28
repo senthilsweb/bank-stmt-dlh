@@ -1,6 +1,6 @@
-"""Generate bank-etl.lvdash.json (AI/BI dashboard definition) from Python helpers.
+"""Generate bank-stmt-dlh.lvdash.json (AI/BI dashboard definition) from Python helpers.
 
-The JSON is committed. Datasets are plain SQL on bank_etl.gold views: no model calls.
+The JSON is committed. Datasets are plain SQL on bank_stmt_dlh.gold views: no model calls.
 Run:  python databricks/dashboards/build_dashboard.py
 """
 from __future__ import annotations
@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-OUT = Path(__file__).with_name("bank-etl.lvdash.json")
+OUT = Path(__file__).with_name("bank-stmt-dlh.lvdash.json")
 CAT = "__CATALOG__"
 
 

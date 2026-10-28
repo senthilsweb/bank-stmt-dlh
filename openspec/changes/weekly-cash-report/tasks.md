@@ -3,8 +3,8 @@
 Owner prerequisites (not code):
 - [x] Approve this proposal (2026-10-24)
 - [x] Shared mailbox `finance-reports@<domain>` created (2026-10-24), 4 members; `MAIL_SENDER` set in `.env`
-- [x] Entra app `bank-etl-mailer` created, `Mail.Send` (Application) consented, secret in `.env` (2026-10-24; token role `Mail.Send` verified)
-- [x] Exchange application access policy created (group `bank-etl-mailer-scope` = finance-reports and noreply); owner reports Test-ApplicationAccessPolicy Granted for both and Denied for another mailbox (2026-10-24). Still to confirm from the job side: `graph_mail_check.py --as <personal mailbox>` returns 403
+- [x] Entra app `bank-stmt-dlh-mailer` created, `Mail.Send` (Application) consented, secret in `.env` (2026-10-24; token role `Mail.Send` verified)
+- [x] Exchange application access policy created (group `bank-stmt-dlh-mailer-scope` = finance-reports and noreply); owner reports Test-ApplicationAccessPolicy Granted for both and Denied for another mailbox (2026-10-24). Still to confirm from the job side: `graph_mail_check.py --as <personal mailbox>` returns 403
 - [x] `.env` filled (sender finance-reports@<domain>, dry run to the owner): `MAIL_CLIENT_ID`, `MAIL_CLIENT_SECRET`, `MAIL_SENDER`, `MAIL_RECIPIENTS`, `MAIL_DRY_RUN_TO`, `MAIL_MODE=dry`
 
 Execution — bolts (M0 first; M1 and M2 are disjoint and can run in parallel after M0):

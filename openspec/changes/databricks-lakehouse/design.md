@@ -4,7 +4,7 @@
 
 | Layer | Schema | Tables | Notes |
 |---|---|---|---|
-| Landing | MinIO `bank-etl/statements/` | raw PDFs | The only copy of the files. Nothing is stored in Databricks |
+| Landing | MinIO `bank-stmt-dlh/statements/` | raw PDFs | The only copy of the files. Nothing is stored in Databricks |
 | Bronze | `bronze` | `statement_files`, `raw_lines` | One row per PDF: object key, etag, `file_sha256`, size, `ingested_at`; plus the parsed raw lines. Never edited |
 | Silver | `silver` | `statements`, `transactions`, `quarantine` | Parsed and reconciled only. `txn_id` is the merge key |
 | Gold | `gold` | `fact_transactions`, `recurring_series`, `monthly_summary`, `monthly_by_category`, `founder_monthly`, `review_queue`, `upcoming_payments` | What the dashboard reads |
@@ -40,7 +40,7 @@ and discards it. Only parsed rows and file metadata are stored as tables.
 - Unity Catalog cannot map MinIO on Free Edition (only the managed location exists,
   external access is off), so there is no volume or external location.
 - The job needs the MinIO endpoint, access key and secret in the secret scope.
-  The key must be limited to bucket `bank-etl`, not the root account.
+  The key must be limited to bucket `bank-stmt-dlh`, not the root account.
 - If MinIO is unreachable the job stops after the discover task, tables keep their
   last good data, and the owner gets an alert.
 - Feasibility (bolt B0) passed on 2026-10-18: serverless compute installs `pdfplumber`,

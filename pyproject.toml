@@ -1,5 +1,5 @@
 [project]
-name = "bank-etl"
+name = "bank-stmt-dlh"
 version = "0.1.0"
 description = "Parse bank statement PDFs (HDFC current account) into a reconciled ledger: DuckDB locally or a Databricks lakehouse, with category, recurring and cash reports"
 authors = [
@@ -26,4 +26,7 @@ package = false
 dev = [
     "pytest>=8.0.0",
     "jupyter>=1.0",
+]
+docs = [
+    "mkdocs-material>=9.5",
 ]

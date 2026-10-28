@@ -154,7 +154,7 @@ def render_html(r: Report, *, logo_cid: str = "logo-white", currency: str = "INR
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{ups}</table>
   <div {h4}>Needs a person</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{review}</table></td></tr>
-<tr><td>{fx}<div style="background:{p["tint"]};color:{p["muted"]};padding:12px 22px;font-size:11px">Attached: {e(pdf_name(r, "USD"))} and {e(pdf_name(r, "INR"))} · Sent by the bank-etl job · Figures from loaded bank statements</div></td></tr>
+<tr><td>{fx}<div style="background:{p["tint"]};color:{p["muted"]};padding:12px 22px;font-size:11px">Attached: {e(pdf_name(r, "USD"))} and {e(pdf_name(r, "INR"))} · Sent by the bank-stmt-dlh job · Figures from loaded bank statements</div></td></tr>
 </table></td></tr></table></body></html>"""
 
 
@@ -221,7 +221,7 @@ def render_pdf(r: Report, currency: str) -> bytes:
         story += [Paragraph(f"Amounts in INR, the book of record. The USD version uses 1 USD = INR {r.rate:,.2f} (ECB reference rate, {r.rate_date.day} {r.rate_date:%b %Y}).", small)]
     buf = io.BytesIO()
     SimpleDocTemplate(buf, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=14 * mm, bottomMargin=16 * mm,
-                      title=subject(r), author="bank-etl").build(story, canvasmaker=Numbered)
+                      title=subject(r), author="bank-stmt-dlh").build(story, canvasmaker=Numbered)
     return buf.getvalue()
 
 

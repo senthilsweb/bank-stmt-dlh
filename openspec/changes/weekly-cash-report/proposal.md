@@ -10,7 +10,7 @@ cash position in their inbox without asking, in INR with USD available.
 
 ## What changes
 
-- A second Databricks job `bank-etl-weekly-cash-report` runs every **Monday 00:00 America/New_York** (the end of Sunday)
+- A second Databricks job `bank-stmt-dlh-weekly-cash-report` runs every **Monday 00:00 America/New_York** (the end of Sunday)
   and can be **started on demand** (`make report`, or Run now in Databricks with parameters).
 - It sends one email per week: a formatted **HTML body in INR by default** (`report_body_currency` in `config/settings.yaml`, `INR` or `USD`), and **two PDF attachments**, the same
   report in USD and in INR. The PDFs are the job's own summary, not the bank's statement.

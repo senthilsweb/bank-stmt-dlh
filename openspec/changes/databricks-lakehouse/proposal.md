@@ -20,7 +20,7 @@ The owner wants:
 
 ## What changes
 
-- New catalog (working name `bank_etl`) with schemas `bronze`, `silver`, `gold`.
+- New catalog (working name `bank_stmt_dlh`) with schemas `bronze`, `silver`, `gold`.
 - The existing deterministic parser and reconciliation move into a Databricks Job
   as plain Python. `ai_parse_document` is **not** the primary parser: the PDFs are
   text-based, the code parser is exact and free, and reconciliation proves it.

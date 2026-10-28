@@ -1,7 +1,7 @@
 schema: spec-driven
 
 context: |
-  Project: bank-etl. Turns ConceptLabs's HDFC current account statement PDFs into
+  Project: bank-stmt-dlh. Turns ConceptLabs's HDFC current account statement PDFs into
   a clean ledger for category reports, recurring payments, trends and projections.
   Owned by ConceptLabs, source shared publicly (see openspec/changes/public-release). Financial data: never committed, never logged.
 

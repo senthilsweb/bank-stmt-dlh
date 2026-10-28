@@ -18,7 +18,7 @@ browser.
 - A new reader `src/sharepoint_reader.py` calls Microsoft Graph with an Entra app
   (client credentials). It has the same two functions as today's reader: list PDFs, download one.
 - The app gets **read-only access to one folder only** (`Files.SelectedOperations.Selected` plus a per-folder `read` grant), because the statements sit in the root site beside other operations documents.
-- Credentials move to the `bank-etl` secret scope: `sp_tenant_id`, `sp_client_id`,
+- Credentials move to the `bank-stmt-dlh` secret scope: `sp_tenant_id`, `sp_client_id`,
   `sp_client_secret`. Site, library and the per-year folders (`<path to the statements folder>`) are plain settings in `config/settings.yaml`.
 - A setting `statement_source: minio | sharepoint` lets the parity run and a rollback use either source.
 - Ingest dedups by **SHA-256 first**, so the 10 files already loaded are not parsed again

@@ -3,7 +3,7 @@
 # MAGIC # 01 Reference seed (bolt B2)
 # MAGIC
 # MAGIC **Why.** Categories, payee map, rules and declared recurring payments live as YAML in git (`config/`).
-# MAGIC This notebook copies them into `bank_etl.gold` tables so the dashboard and SQL users can see what each label is based on.
+# MAGIC This notebook copies them into `bank_stmt_dlh.gold` tables so the dashboard and SQL users can see what each label is based on.
 # MAGIC The categorizer itself reads the same YAML files, so git stays the single source of truth. Do not edit these tables by hand: change the YAML and deploy again.
 # MAGIC
 # MAGIC **Writes.** `gold.dim_category`, `gold.payee_map`, `gold.category_rules`, `gold.recurring_declared`, `gold.settings` (full refresh each run).

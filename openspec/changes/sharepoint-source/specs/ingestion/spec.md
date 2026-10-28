@@ -34,7 +34,7 @@ hold any write permission or any tenant-wide Sites or Files permission.
 
 ### Requirement: Graph credentials live in the secret scope
 
-`sp_tenant_id`, `sp_client_id` and `sp_client_secret` SHALL be read from secret scope `bank-etl` and
+`sp_tenant_id`, `sp_client_id` and `sp_client_secret` SHALL be read from secret scope `bank-stmt-dlh` and
 SHALL NOT appear in git, logs, tables or notebook output.
 
 ### Requirement: Source is switchable

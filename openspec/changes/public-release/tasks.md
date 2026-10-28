@@ -12,6 +12,7 @@ Execution — bolts (B1 and B2 are disjoint; B3 after B1; B4 last):
 - [x] **B3 Docs** (2026-10-27): README rewrite; cookbooks, `.env.sample`, OpenSpec, `CLAUDE.md`, `pyproject.toml` scrubbed; `LICENSE`
 - [x] **B4 Publish** (2026-10-27): `config/publish.yaml` maps private -> public (excludes, overlays, text and path replacements); every replacement key is a deny term
 - [x] **B5 Samples** (2026-10-27): `scripts/make_sample_statements.py` -> six synthetic statements that reconcile; fictional payee map; `scripts/make_text_logo.py` -> ConceptLabs logos; `docs/README.public.md`: `scripts/publish_public.py`, `make publish`, first export scanned clean
+- [x] **B6 Docs site** (2026-10-27): MkDocs Material in `docs/` + `mkdocs.yml`, GitHub Pages via `.github/workflows/docs.yml` (gh-pages); public repo renamed `bank-stmt-dlh`
 
 Operations:
 - [x] `make test` green on the branch (45 passed, 2026-10-27)
