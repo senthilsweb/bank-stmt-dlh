@@ -2,7 +2,7 @@
 
 Owner prerequisites (not code):
 - [x] Approve this proposal (2026-10-27)
-- [x] Public repo: `bank-etl` under the owner's GitHub login (decided 2026-10-27). This branch is not merged to main; good parts may be ported later
+- [x] Public repo: `bank-stmt-dlh` (renamed from `bank-etl` the same day) under the owner's GitHub login (decided 2026-10-27). This branch is not merged to main; good parts may be ported later
 - [x] Licence MIT (confirmed 2026-10-27)
 - [x] Public branding: no company name, text logo for the fictional company ConceptLabs; README centred on local folder and MinIO
 

@@ -41,7 +41,7 @@ mailboxes `noreply@<domain>`, the owner's handle "the owner", the home-lab host 
 
 ## Decisions of 2026-10-27
 
-- The public copy is a separate repo (`bank-etl`) with its own identity: fictional company ConceptLabs, text logo,
+- The public copy is a separate repo (`bank-stmt-dlh`, first named `bank-etl`) with its own identity: fictional company ConceptLabs, text logo,
   sample statements. `config/publish.yaml` (private) holds the mapping: excluded paths, overlays (`config/examples`
   -> `config`, `assets/public` -> `assets`, `docs/README.public.md` -> `README.md`), text replacements applied to
   contents and file names, lines to drop. Every replacement key doubles as a deny term, so a leftover stops the export.
