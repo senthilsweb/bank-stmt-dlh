@@ -1,0 +1,11 @@
+# Example for scripts/publish_public.py. Copy to config/publish.yaml (gitignored in a public copy) and edit.
+public_repo_dir: ../my-public-copy
+git_author: "Your Name <id+login@users.noreply.github.com>"
+exclude:
+  - config/merchant_map.yaml
+  - config/recurring_declared.yaml
+overlays:
+  config/examples: config
+replace:
+  "My Company": "Example Co"
+drop_lines: []

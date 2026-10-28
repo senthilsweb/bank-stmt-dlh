@@ -1,0 +1,41 @@
+# Sample payee map with FICTIONAL names (they match the synthetic statements in samples/statements).
+# Replace with your own payees. Known payees -> category, checked before rules.yaml and Jev.
+# A name matches when it appears in counterparty_clean as whole words, case-insensitive:
+# "ARJUN MEHTA" covers "ARJUN MEHTA" and "ARJUN MEHTA CONTRACT". An entry can be a plain name,
+# "re:<regex>" (bank narrations split words, e.g. "GLOBEX TECHNOL OGIES"), or
+# {name: ..., direction: credit|debit, from: YYYY-MM-DD, until: YYYY-MM-DD} to limit it by direction
+# or by date (both dates inclusive). Category keys come from categories.yaml.
+merchants:
+  payroll-contractors:
+    # Arjun was a contractor until 30 Sep 2026, then became the first full-time employee.
+    - {name: ARJUN MEHTA, until: 2026-09-30}
+    - re:RAVI\s*SHANKAR        # consultant, paid by IMPS with "CONSULTANCY FEE"
+  payroll-employees:
+    - {name: ARJUN MEHTA, from: 2026-10-01}
+  employee-benefits:
+    - re:SAFEGUARD\s*INSURANCE # annual employee health insurance
+  office-rent-utilities:
+    - re:NORTHSTAR\s*PROPERT   # office rent, NEFT to the landlord, paid yearly
+  professional-fees:
+    - re:AUDIT\s*PARTNERS      # auditor fee, paid yearly
+  interns:
+    - PRIYA NAIR
+  # Globex is a client; payments received are against a PO / work order.
+  client-receipts:
+    - {name: "re:GLOBEX\\s*TECHNO", direction: credit}
+  # Meera is a co-founder: any deposit is investment for operational expenses.
+  founder-investment:
+    - {name: MEERA KAPOOR, direction: credit}
+  investor-funding:
+    - {name: ACME VENTURES, direction: credit}
+
+# The managing founder is handled separately (see categorize.py):
+#  - every debit to them is "operations" (high level, no split)
+#  - a credit from them that matches an earlier debit (same amount) is a loan repayment
+#  - any other credit from them is founder funding
+founder:
+  names: [VIKRAM RAO]
+  debit_category: operations
+  credit_matched_category: founder-loan-repayment
+  credit_unmatched_category: founder-funding
+  expected_payout: {amount: 100000, note: "monthly payout, may land in two transfers around month end"}

@@ -1,0 +1,22 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# bank data never leaves the machine (the synthetic statements in samples/ are the one exception)
+data/
+*.pdf
+!samples/**/*.pdf
+*.parquet
+*.duckdb
+*.duckdb.wal
+
+# generated documentation pages
+docs/artifacts/out/

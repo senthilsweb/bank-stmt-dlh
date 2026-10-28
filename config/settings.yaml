@@ -1,0 +1,10 @@
+# Tunables and names. Change here, not in code. Secrets never go here (see .env.sample).
+company_name: ConceptLabs        # shown in the weekly report and the dashboard title
+catalog: bank_etl                # Unity Catalog catalog (create it once by hand)
+secret_scope: bank-etl           # Databricks secret scope filled by `make secrets`
+minio_bucket: bank-etl           # statement_source: minio. Keys under minio_prefix are monthly, under <prefix>weekly/ weekly
+minio_prefix: statements/
+jev_confidence_threshold: 0.9    # Jev label accepted at or above this
+review_amount_threshold: 5000    # unlabelled rows at or above this (INR) need a human
+statement_source: minio          # minio | sharepoint (SharePoint needs docs/cookbook/sharepoint-source-setup.md)
+report_body_currency: INR        # currency of the weekly cash report email body: INR | USD. The two PDFs are always sent in both

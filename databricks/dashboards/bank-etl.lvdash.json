@@ -1,0 +1,4013 @@
+{
+ "datasets": [
+  {
+   "name": "ds_kpis",
+   "displayName": "Headline figures",
+   "queryLines": [
+    "select * from __CATALOG__.gold.kpis"
+   ]
+  },
+  {
+   "name": "ds_in",
+   "displayName": "Money in by month",
+   "queryLines": [
+    "select month, measure, amount from __CATALOG__.gold.monthly_flow_long where measure in ('Client receipts', 'Funding', 'Other credits')"
+   ]
+  },
+  {
+   "name": "ds_out",
+   "displayName": "Money out by month",
+   "queryLines": [
+    "select month, measure, amount from __CATALOG__.gold.monthly_flow_long where measure in ('Operating spend', 'Founder payout')"
+   ]
+  },
+  {
+   "name": "ds_monthly",
+   "displayName": "Monthly cash flow",
+   "queryLines": [
+    "select month, client_receipts, funding_in, other_in, operating_spend, founder_payout, total_outflow, closing_balance, case when partial then 'partial' else 'full' end as month_type from __CATALOG__.gold.monthly_flow order by month"
+   ]
+  },
+  {
+   "name": "ds_cat",
+   "displayName": "Spend by category",
+   "queryLines": [
+    "select category, category_type, amount, txns from __CATALOG__.gold.category_totals order by amount desc"
+   ]
+  },
+  {
+   "name": "ds_cat_month",
+   "displayName": "Spend by category and month",
+   "queryLines": [
+    "select month, category, category_type, amount, txns from __CATALOG__.gold.spend_by_category_month order by month, amount desc"
+   ]
+  },
+  {
+   "name": "ds_recurring",
+   "displayName": "Recurring and yearly payments",
+   "queryLines": [
+    "select payee, category, cadence, typical_amount, date_format(last_seen, 'yyyy-MM-dd') as last_seen, date_format(next_expected, 'yyyy-MM-dd') as next_expected, status, source from __CATALOG__.gold.upcoming_payments order by case status when 'upcoming' then 0 when 'lapsed' then 1 else 2 end, next_expected"
+   ]
+  },
+  {
+   "name": "ds_funding",
+   "displayName": "Funding received",
+   "queryLines": [
+    "select month, category, amount, txns from __CATALOG__.gold.funding_received order by month, category"
+   ]
+  },
+  {
+   "name": "ds_founder",
+   "displayName": "Founder payments",
+   "queryLines": [
+    "select month, category, paid_to_founder, received_from_founder from __CATALOG__.gold.founder_monthly order by month"
+   ]
+  },
+  {
+   "name": "ds_review",
+   "displayName": "Unlabelled payments",
+   "queryLines": [
+    "select category, direction, txns, amount from __CATALOG__.gold.review_summary"
+   ]
+  },
+  {
+   "name": "ds_status",
+   "displayName": "Statement status",
+   "queryLines": [
+    "select file, statement_kind, date_format(period_from, 'yyyy-MM-dd') as period_from, date_format(period_to, 'yyyy-MM-dd') as period_to, txn_count, coalesce(duplicate_lines, 0) as duplicate_lines, cast(reconciled as string) as reconciled, date_format(ingested_at, 'yyyy-MM-dd HH:mm') as ingested_at from __CATALOG__.gold.statement_status order by statement_kind, file"
+   ]
+  },
+  {
+   "name": "ds_dups",
+   "displayName": "Duplicate line items",
+   "queryLines": [
+    "select file, statement_kind, duplicate_of, lines from __CATALOG__.gold.duplicate_lines order by file"
+   ]
+  },
+  {
+   "name": "ds_dr_flow",
+   "displayName": "Cash flow by day and category",
+   "queryLines": [
+    "select txn_date, category, category_type, money_in, money_out, net, txns from __CATALOG__.gold.cashflow_daily"
+   ]
+  },
+  {
+   "name": "ds_dr_long",
+   "displayName": "Money in and out by day",
+   "queryLines": [
+    "select txn_date, measure, amount from __CATALOG__.gold.cashflow_daily LATERAL VIEW STACK(2, 'Money in', money_in, 'Money out', money_out) t as measure, amount"
+   ]
+  },
+  {
+   "name": "ds_dr_bal",
+   "displayName": "Closing balance by day",
+   "queryLines": [
+    "select txn_date, closing_balance from __CATALOG__.gold.balance_daily"
+   ]
+  },
+  {
+   "name": "ds_dr_tx",
+   "displayName": "Payments in the range",
+   "queryLines": [
+    "select txn_date, date_format(txn_date, 'yyyy-MM-dd') as day, counterparty_clean, category, direction, amount from __CATALOG__.gold.fact_transactions order by txn_date desc, seq desc"
+   ]
+  },
+  {
+   "name": "ds_source",
+   "displayName": "How payments were labelled",
+   "queryLines": [
+    "select category_source, txns, amount from __CATALOG__.gold.category_source_mix order by txns desc"
+   ]
+  },
+  {
+   "name": "ds_queue",
+   "displayName": "Review queue",
+   "queryLines": [
+    "select category, counterparty_clean, direction, txns, total, reason from __CATALOG__.gold.review_queue order by case when category = 'human-intervention-required' then 0 else 1 end, total desc"
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "name": "page_overview",
+   "displayName": "Overview",
+   "layout": [
+    {
+     "widget": {
+      "name": "txt_over",
+      "textbox_spec": "# __COMPANY__ Finance\n**Cash, outflow and runway** from the bank statements loaded so far. Every figure is a SQL view on `gold`; nothing here is generated by a model."
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "k_cash",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_kpis",
+         "fields": [
+          {
+           "name": "cash",
+           "expression": "SUM(`cash`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Cash in bank"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "cash",
+         "format": {
+          "type": "number-currency",
+          "currencyCode": "INR",
+          "abbreviation": "compact",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 2
+          }
+         },
+         "displayName": "Cash in bank"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 2,
+      "width": 2,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "k_out",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_kpis",
+         "fields": [
+          {
+           "name": "monthly_outflow",
+           "expression": "SUM(`monthly_outflow`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Monthly outflow (last 3 full months)"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "monthly_outflow",
+         "format": {
+          "type": "number-currency",
+          "currencyCode": "INR",
+          "abbreviation": "compact",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 2
+          }
+         },
+         "displayName": "Monthly outflow (last 3 full months)"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 2,
+      "y": 2,
+      "width": 2,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "k_run",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_kpis",
+         "fields": [
+          {
+           "name": "runway_months",
+           "expression": "SUM(`runway_months`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Runway (months, no new money)"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "runway_months",
+         "format": {
+          "type": "number",
+          "abbreviation": "none",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 1
+          }
+         },
+         "displayName": "Runway (months, no new money)"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 4,
+      "y": 2,
+      "width": 2,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "k_fund",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_kpis",
+         "fields": [
+          {
+           "name": "funding_received",
+           "expression": "SUM(`funding_received`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Funding received, 2026"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "funding_received",
+         "format": {
+          "type": "number-currency",
+          "currencyCode": "INR",
+          "abbreviation": "compact",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 2
+          }
+         },
+         "displayName": "Funding received, 2026"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 5,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "k_rec",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_kpis",
+         "fields": [
+          {
+           "name": "client_receipts",
+           "expression": "SUM(`client_receipts`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Client receipts, 2026"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "client_receipts",
+         "format": {
+          "type": "number-currency",
+          "currencyCode": "INR",
+          "abbreviation": "compact",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 2
+          }
+         },
+         "displayName": "Client receipts, 2026"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 3,
+      "y": 5,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "c_in",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_in",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "sum(amount)",
+           "expression": "SUM(`amount`)"
+          },
+          {
+           "name": "measure",
+           "expression": "`measure`"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "Money in by month"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "month",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Month"
+        },
+        "y": {
+         "fieldName": "sum(amount)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Amount (INR)"
+        },
+        "color": {
+         "fieldName": "measure",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "measure"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 8,
+      "width": 3,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "c_out",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_out",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "sum(amount)",
+           "expression": "SUM(`amount`)"
+          },
+          {
+           "name": "measure",
+           "expression": "`measure`"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "Money out by month"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "month",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Month"
+        },
+        "y": {
+         "fieldName": "sum(amount)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Amount (INR)"
+        },
+        "color": {
+         "fieldName": "measure",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "measure"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 3,
+      "y": 8,
+      "width": 3,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "c_bal",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_monthly",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "sum(closing_balance)",
+           "expression": "SUM(`closing_balance`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "line",
+       "frame": {
+        "showTitle": true,
+        "title": "Closing balance by month (bank figure)"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "month",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Month"
+        },
+        "y": {
+         "fieldName": "sum(closing_balance)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Balance (INR)"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 14,
+      "width": 6,
+      "height": 5
+     }
+    },
+    {
+     "widget": {
+      "name": "t_monthly",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_monthly",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "client_receipts",
+           "expression": "`client_receipts`"
+          },
+          {
+           "name": "funding_in",
+           "expression": "`funding_in`"
+          },
+          {
+           "name": "other_in",
+           "expression": "`other_in`"
+          },
+          {
+           "name": "operating_spend",
+           "expression": "`operating_spend`"
+          },
+          {
+           "name": "founder_payout",
+           "expression": "`founder_payout`"
+          },
+          {
+           "name": "total_outflow",
+           "expression": "`total_outflow`"
+          },
+          {
+           "name": "closing_balance",
+           "expression": "`closing_balance`"
+          },
+          {
+           "name": "month_type",
+           "expression": "`month_type`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Monthly cash flow (the data behind the three charts)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "month",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Month",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Month"
+         },
+         {
+          "fieldName": "client_receipts",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 1,
+          "title": "Client receipts",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Client receipts",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "funding_in",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 2,
+          "title": "Funding",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Funding",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "other_in",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Other credits",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Other credits",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "operating_spend",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 4,
+          "title": "Operating spend",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Operating spend",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "founder_payout",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 5,
+          "title": "Founder payout",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Founder payout",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "total_outflow",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 6,
+          "title": "Total out",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Total out",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "closing_balance",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 7,
+          "title": "Closing balance",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Closing balance",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "month_type",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 8,
+          "title": "Month",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Month"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 19,
+      "width": 6,
+      "height": 7
+     }
+    },
+    {
+     "widget": {
+      "name": "txt_def",
+      "textbox_spec": "**Definitions.** Cash is the bank's closing balance on the latest statement. Monthly outflow is the mean of all debits, founder payouts included, over the last three full months; the current partial month is left out. Runway is cash divided by that outflow. Funding is money from founders and the investor; it is kept apart from client income."
+     },
+     "position": {
+      "x": 0,
+      "y": 26,
+      "width": 6,
+      "height": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "page_range",
+   "displayName": "Cash flow by date",
+   "layout": [
+    {
+     "widget": {
+      "name": "txt_range",
+      "textbox_spec": "# Cash flow by date\nPick a date range. Every figure, chart and the payment list on this page follows it. Money in and out are the bank's own credits and debits; the balance is the bank's running balance after the last payment of each day."
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "f_range",
+      "queries": [
+       {
+        "name": "q_ds_dr_flow",
+        "query": {
+         "datasetName": "ds_dr_flow",
+         "fields": [
+          {
+           "name": "txn_date",
+           "expression": "`txn_date`"
+          }
+         ],
+         "disaggregated": false
+        }
+       },
+       {
+        "name": "q_ds_dr_long",
+        "query": {
+         "datasetName": "ds_dr_long",
+         "fields": [
+          {
+           "name": "txn_date",
+           "expression": "`txn_date`"
+          }
+         ],
+         "disaggregated": false
+        }
+       },
+       {
+        "name": "q_ds_dr_bal",
+        "query": {
+         "datasetName": "ds_dr_bal",
+         "fields": [
+          {
+           "name": "txn_date",
+           "expression": "`txn_date`"
+          }
+         ],
+         "disaggregated": false
+        }
+       },
+       {
+        "name": "q_ds_dr_tx",
+        "query": {
+         "datasetName": "ds_dr_tx",
+         "fields": [
+          {
+           "name": "txn_date",
+           "expression": "`txn_date`"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "filter-date-range-picker",
+       "encodings": {
+        "fields": [
+         {
+          "fieldName": "txn_date",
+          "displayName": "Date",
+          "queryName": "q_ds_dr_flow"
+         },
+         {
+          "fieldName": "txn_date",
+          "displayName": "Date",
+          "queryName": "q_ds_dr_long"
+         },
+         {
+          "fieldName": "txn_date",
+          "displayName": "Date",
+          "queryName": "q_ds_dr_bal"
+         },
+         {
+          "fieldName": "txn_date",
+          "displayName": "Date",
+          "queryName": "q_ds_dr_tx"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Date range"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 2,
+      "width": 6,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "k_in",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_flow",
+         "fields": [
+          {
+           "name": "money_in",
+           "expression": "SUM(`money_in`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Money in"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "money_in",
+         "format": {
+          "type": "number-currency",
+          "currencyCode": "INR",
+          "abbreviation": "compact",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 2
+          }
+         },
+         "displayName": "Money in"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 4,
+      "width": 2,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "k_out",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_flow",
+         "fields": [
+          {
+           "name": "money_out",
+           "expression": "SUM(`money_out`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Money out"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "money_out",
+         "format": {
+          "type": "number-currency",
+          "currencyCode": "INR",
+          "abbreviation": "compact",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 2
+          }
+         },
+         "displayName": "Money out"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 2,
+      "y": 4,
+      "width": 2,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "k_net",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_flow",
+         "fields": [
+          {
+           "name": "net",
+           "expression": "SUM(`net`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "frame": {
+        "showTitle": true,
+        "title": "Net change"
+       },
+       "encodings": {
+        "value": {
+         "fieldName": "net",
+         "format": {
+          "type": "number-currency",
+          "currencyCode": "INR",
+          "abbreviation": "compact",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 2
+          }
+         },
+         "displayName": "Net change"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 4,
+      "y": 4,
+      "width": 2,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "c_weekly",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_long",
+         "fields": [
+          {
+           "name": "weekly(txn_date)",
+           "expression": "DATE_TRUNC(\"WEEK\", `txn_date`)"
+          },
+          {
+           "name": "sum(amount)",
+           "expression": "SUM(`amount`)"
+          },
+          {
+           "name": "measure",
+           "expression": "`measure`"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "Money in and out by week"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "weekly(txn_date)",
+         "scale": {
+          "type": "temporal"
+         },
+         "displayName": "Date"
+        },
+        "y": {
+         "fieldName": "sum(amount)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Amount (INR)"
+        },
+        "color": {
+         "fieldName": "measure",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "measure"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 7,
+      "width": 3,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "c_bal",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_bal",
+         "fields": [
+          {
+           "name": "daily(txn_date)",
+           "expression": "DATE_TRUNC(\"DAY\", `txn_date`)"
+          },
+          {
+           "name": "sum(closing_balance)",
+           "expression": "SUM(`closing_balance`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "line",
+       "frame": {
+        "showTitle": true,
+        "title": "Closing balance by day"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "daily(txn_date)",
+         "scale": {
+          "type": "temporal"
+         },
+         "displayName": "Date"
+        },
+        "y": {
+         "fieldName": "sum(closing_balance)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Balance (INR)"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 3,
+      "y": 7,
+      "width": 3,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "c_cat_out",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_flow",
+         "fields": [
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "sum(money_out)",
+           "expression": "SUM(`money_out`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "Money out by category"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "category",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Category"
+        },
+        "y": {
+         "fieldName": "sum(money_out)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Money out (INR)"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 13,
+      "width": 3,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "t_dr_flow",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_flow",
+         "fields": [
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "category_type",
+           "expression": "`category_type`"
+          },
+          {
+           "name": "txns",
+           "expression": "`txns`"
+          },
+          {
+           "name": "money_in",
+           "expression": "`money_in`"
+          },
+          {
+           "name": "money_out",
+           "expression": "`money_out`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Money in and out by category (the data behind the chart)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Category",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Category"
+         },
+         {
+          "fieldName": "category_type",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Type",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Type"
+         },
+         {
+          "fieldName": "txns",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 2,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "money_in",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Money in (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Money in (INR)",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "money_out",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 4,
+          "title": "Money out (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Money out (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 3,
+      "y": 13,
+      "width": 3,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "t_dr_tx",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dr_tx",
+         "fields": [
+          {
+           "name": "day",
+           "expression": "`day`"
+          },
+          {
+           "name": "counterparty_clean",
+           "expression": "`counterparty_clean`"
+          },
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "direction",
+           "expression": "`direction`"
+          },
+          {
+           "name": "amount",
+           "expression": "`amount`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Payments in the range"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "day",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Date",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Date"
+         },
+         {
+          "fieldName": "counterparty_clean",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Payee",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payee"
+         },
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 2,
+          "title": "Category",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Category"
+         },
+         {
+          "fieldName": "direction",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 3,
+          "title": "Direction",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Direction"
+         },
+         {
+          "fieldName": "amount",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 4,
+          "title": "Amount (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Amount (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 19,
+      "width": 6,
+      "height": 9
+     }
+    }
+   ]
+  },
+  {
+   "name": "page_spend",
+   "displayName": "Spend",
+   "layout": [
+    {
+     "widget": {
+      "name": "txt_spend",
+      "textbox_spec": "# Where the money went\nAll debits, January to October 2026, by category. `unclassified` and `human-intervention-required` are not labelled yet."
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "c_cat",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_cat",
+         "fields": [
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "sum(amount)",
+           "expression": "SUM(`amount`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "Spend by category"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "category",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Category"
+        },
+        "y": {
+         "fieldName": "sum(amount)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Amount (INR)"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 2,
+      "width": 6,
+      "height": 7
+     }
+    },
+    {
+     "widget": {
+      "name": "t_cat",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_cat",
+         "fields": [
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "category_type",
+           "expression": "`category_type`"
+          },
+          {
+           "name": "txns",
+           "expression": "`txns`"
+          },
+          {
+           "name": "amount",
+           "expression": "`amount`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Spend by category (the data behind the chart)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Category",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Category"
+         },
+         {
+          "fieldName": "category_type",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Type",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Type"
+         },
+         {
+          "fieldName": "txns",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 2,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "amount",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Amount (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Amount (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 9,
+      "width": 6,
+      "height": 8
+     }
+    },
+    {
+     "widget": {
+      "name": "c_catm",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_cat_month",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "sum(amount)",
+           "expression": "SUM(`amount`)"
+          },
+          {
+           "name": "category",
+           "expression": "`category`"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "Spend by month and category"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "month",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Month"
+        },
+        "y": {
+         "fieldName": "sum(amount)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Amount (INR)"
+        },
+        "color": {
+         "fieldName": "category",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "category"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 17,
+      "width": 6,
+      "height": 7
+     }
+    },
+    {
+     "widget": {
+      "name": "t_catm",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_cat_month",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "category_type",
+           "expression": "`category_type`"
+          },
+          {
+           "name": "txns",
+           "expression": "`txns`"
+          },
+          {
+           "name": "amount",
+           "expression": "`amount`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Spend by month and category (the data behind the chart)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "month",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Month",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Month"
+         },
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Category",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Category"
+         },
+         {
+          "fieldName": "category_type",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 2,
+          "title": "Type",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Type"
+         },
+         {
+          "fieldName": "txns",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "amount",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 4,
+          "title": "Amount (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Amount (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 24,
+      "width": 6,
+      "height": 8
+     }
+    }
+   ]
+  },
+  {
+   "name": "page_rec",
+   "displayName": "Recurring and yearly",
+   "layout": [
+    {
+     "widget": {
+      "name": "txt_rec",
+      "textbox_spec": "# Recurring and yearly payments\nFound from the statements by a fixed gap and amount test, plus rent and the auditor fee which fall once a year (declared in config). *Lapsed* means it was expected and no payment came. *Ended* is an engagement you told us has stopped."
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "t_rec",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_recurring",
+         "fields": [
+          {
+           "name": "payee",
+           "expression": "`payee`"
+          },
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "cadence",
+           "expression": "`cadence`"
+          },
+          {
+           "name": "typical_amount",
+           "expression": "`typical_amount`"
+          },
+          {
+           "name": "last_seen",
+           "expression": "`last_seen`"
+          },
+          {
+           "name": "next_expected",
+           "expression": "`next_expected`"
+          },
+          {
+           "name": "status",
+           "expression": "`status`"
+          },
+          {
+           "name": "source",
+           "expression": "`source`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Recurring and yearly payments"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "payee",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Payee",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payee"
+         },
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Category",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Category"
+         },
+         {
+          "fieldName": "cadence",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 2,
+          "title": "Repeats",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Repeats"
+         },
+         {
+          "fieldName": "typical_amount",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Amount (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Amount (INR)",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "last_seen",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 4,
+          "title": "Last paid",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Last paid"
+         },
+         {
+          "fieldName": "next_expected",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 5,
+          "title": "Next due",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Next due"
+         },
+         {
+          "fieldName": "status",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 6,
+          "title": "Status",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Status"
+         },
+         {
+          "fieldName": "source",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 7,
+          "title": "Found by",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Found by"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 3,
+      "width": 6,
+      "height": 8
+     }
+    }
+   ]
+  },
+  {
+   "name": "page_fund",
+   "displayName": "Funding and founder",
+   "layout": [
+    {
+     "widget": {
+      "name": "txt_fund",
+      "textbox_spec": "# Funding and founder\nMoney put in by founders and the investor, and payments to the founder (shown as operations, no further split)."
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "c_fund",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_funding",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "sum(amount)",
+           "expression": "SUM(`amount`)"
+          },
+          {
+           "name": "category",
+           "expression": "`category`"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "Funding received by month"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "month",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Month"
+        },
+        "y": {
+         "fieldName": "sum(amount)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Amount (INR)"
+        },
+        "color": {
+         "fieldName": "category",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "category"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 2,
+      "width": 6,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "t_fund",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_funding",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "txns",
+           "expression": "`txns`"
+          },
+          {
+           "name": "amount",
+           "expression": "`amount`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Funding received (the data behind the chart)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "month",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Month",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Month"
+         },
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Source",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Source"
+         },
+         {
+          "fieldName": "txns",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 2,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "amount",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Amount (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Amount (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 8,
+      "width": 6,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "t_founder",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_founder",
+         "fields": [
+          {
+           "name": "month",
+           "expression": "`month`"
+          },
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "paid_to_founder",
+           "expression": "`paid_to_founder`"
+          },
+          {
+           "name": "received_from_founder",
+           "expression": "`received_from_founder`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Founder payments and deposits"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "month",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Month",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Month"
+         },
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Category",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Category"
+         },
+         {
+          "fieldName": "paid_to_founder",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 2,
+          "title": "Paid to founder (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Paid to founder (INR)",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "received_from_founder",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Received from founder (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Received from founder (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 14,
+      "width": 6,
+      "height": 6
+     }
+    }
+   ]
+  },
+  {
+   "name": "page_dq",
+   "displayName": "Data quality",
+   "layout": [
+    {
+     "widget": {
+      "name": "txt_dq",
+      "textbox_spec": "# Data quality\nEvery statement is checked against the bank's own totals before it is loaded. Payments that no rule, payee list or Jev label could place with confidence are listed here for a person."
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "t_status",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_status",
+         "fields": [
+          {
+           "name": "file",
+           "expression": "`file`"
+          },
+          {
+           "name": "statement_kind",
+           "expression": "`statement_kind`"
+          },
+          {
+           "name": "period_from",
+           "expression": "`period_from`"
+          },
+          {
+           "name": "period_to",
+           "expression": "`period_to`"
+          },
+          {
+           "name": "txn_count",
+           "expression": "`txn_count`"
+          },
+          {
+           "name": "duplicate_lines",
+           "expression": "`duplicate_lines`"
+          },
+          {
+           "name": "reconciled",
+           "expression": "`reconciled`"
+          },
+          {
+           "name": "ingested_at",
+           "expression": "`ingested_at`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Statement reconciliation (weekly and monthly)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "file",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Statement",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Statement"
+         },
+         {
+          "fieldName": "statement_kind",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Kind",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Kind"
+         },
+         {
+          "fieldName": "period_from",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 2,
+          "title": "From",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "From"
+         },
+         {
+          "fieldName": "period_to",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 3,
+          "title": "To",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "To"
+         },
+         {
+          "fieldName": "txn_count",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 4,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "duplicate_lines",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 5,
+          "title": "Already loaded",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Already loaded"
+         },
+         {
+          "fieldName": "reconciled",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 6,
+          "title": "Reconciled",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Reconciled"
+         },
+         {
+          "fieldName": "ingested_at",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 7,
+          "title": "Loaded at",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Loaded at"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 2,
+      "width": 6,
+      "height": 7
+     }
+    },
+    {
+     "widget": {
+      "name": "t_dups",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_dups",
+         "fields": [
+          {
+           "name": "file",
+           "expression": "`file`"
+          },
+          {
+           "name": "statement_kind",
+           "expression": "`statement_kind`"
+          },
+          {
+           "name": "duplicate_of",
+           "expression": "`duplicate_of`"
+          },
+          {
+           "name": "lines",
+           "expression": "`lines`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Duplicate line items (weekly and monthly overlap, counted once)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "file",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Statement",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Statement"
+         },
+         {
+          "fieldName": "statement_kind",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Kind",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Kind"
+         },
+         {
+          "fieldName": "duplicate_of",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 2,
+          "title": "Line items already loaded from",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Line items already loaded from"
+         },
+         {
+          "fieldName": "lines",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Line items",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Line items"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 9,
+      "width": 6,
+      "height": 4
+     }
+    },
+    {
+     "widget": {
+      "name": "c_src",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_source",
+         "fields": [
+          {
+           "name": "category_source",
+           "expression": "`category_source`"
+          },
+          {
+           "name": "sum(txns)",
+           "expression": "SUM(`txns`)"
+          }
+         ],
+         "disaggregated": false
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "frame": {
+        "showTitle": true,
+        "title": "How payments were labelled"
+       },
+       "encodings": {
+        "x": {
+         "fieldName": "category_source",
+         "scale": {
+          "type": "categorical"
+         },
+         "displayName": "Labelled by"
+        },
+        "y": {
+         "fieldName": "sum(txns)",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Payments"
+        }
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 13,
+      "width": 3,
+      "height": 5
+     }
+    },
+    {
+     "widget": {
+      "name": "t_src",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_source",
+         "fields": [
+          {
+           "name": "category_source",
+           "expression": "`category_source`"
+          },
+          {
+           "name": "txns",
+           "expression": "`txns`"
+          },
+          {
+           "name": "amount",
+           "expression": "`amount`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "How payments were labelled (the data behind the chart)"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "category_source",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Labelled by",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Labelled by"
+         },
+         {
+          "fieldName": "txns",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 1,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "amount",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 2,
+          "title": "Amount (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Amount (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 3,
+      "y": 13,
+      "width": 3,
+      "height": 5
+     }
+    },
+    {
+     "widget": {
+      "name": "t_review",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_review",
+         "fields": [
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "direction",
+           "expression": "`direction`"
+          },
+          {
+           "name": "txns",
+           "expression": "`txns`"
+          },
+          {
+           "name": "amount",
+           "expression": "`amount`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Unlabelled payments"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Status",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Status"
+         },
+         {
+          "fieldName": "direction",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Direction",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Direction"
+         },
+         {
+          "fieldName": "txns",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 2,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "amount",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Amount (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Amount (INR)",
+          "numberFormat": "0.00"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 18,
+      "width": 6,
+      "height": 4
+     }
+    },
+    {
+     "widget": {
+      "name": "t_queue",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "ds_queue",
+         "fields": [
+          {
+           "name": "category",
+           "expression": "`category`"
+          },
+          {
+           "name": "counterparty_clean",
+           "expression": "`counterparty_clean`"
+          },
+          {
+           "name": "direction",
+           "expression": "`direction`"
+          },
+          {
+           "name": "txns",
+           "expression": "`txns`"
+          },
+          {
+           "name": "total",
+           "expression": "`total`"
+          },
+          {
+           "name": "reason",
+           "expression": "`reason`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 1,
+       "widgetType": "table",
+       "allowHTMLByDefault": false,
+       "itemsPerPage": 25,
+       "condensed": true,
+       "withRowNumber": false,
+       "invisibleColumns": [],
+       "paginationSize": "default",
+       "frame": {
+        "showTitle": true,
+        "title": "Review queue"
+       },
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "category",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 0,
+          "title": "Status",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Status"
+         },
+         {
+          "fieldName": "counterparty_clean",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 1,
+          "title": "Payee",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payee"
+         },
+         {
+          "fieldName": "direction",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 2,
+          "title": "Direction",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Direction"
+         },
+         {
+          "fieldName": "txns",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "integer",
+          "displayAs": "number",
+          "visible": true,
+          "order": 3,
+          "title": "Payments",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Payments"
+         },
+         {
+          "fieldName": "total",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "float",
+          "displayAs": "number",
+          "visible": true,
+          "order": 4,
+          "title": "Total (INR)",
+          "allowSearch": false,
+          "alignContent": "right",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Total (INR)",
+          "numberFormat": "0.00"
+         },
+         {
+          "fieldName": "reason",
+          "booleanValues": [
+           "false",
+           "true"
+          ],
+          "imageUrlTemplate": "{{ @ }}",
+          "imageTitleTemplate": "{{ @ }}",
+          "imageWidth": "",
+          "imageHeight": "",
+          "linkUrlTemplate": "{{ @ }}",
+          "linkTextTemplate": "{{ @ }}",
+          "linkTitleTemplate": "{{ @ }}",
+          "linkOpenInNewTab": true,
+          "type": "string",
+          "displayAs": "string",
+          "visible": true,
+          "order": 5,
+          "title": "Why",
+          "allowSearch": false,
+          "alignContent": "left",
+          "allowHTML": false,
+          "highlightLinks": false,
+          "useMonospaceFont": false,
+          "preserveWhitespace": false,
+          "displayName": "Why"
+         }
+        ]
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 22,
+      "width": 6,
+      "height": 8
+     }
+    }
+   ]
+  }
+ ]
+}

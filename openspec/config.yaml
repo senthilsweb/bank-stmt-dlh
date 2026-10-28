@@ -1,0 +1,22 @@
+schema: spec-driven
+
+context: |
+  Project: bank-etl. Turns ConceptLabs's HDFC current account statement PDFs into
+  a clean ledger for category reports, recurring payments, trends and projections.
+  Owned by ConceptLabs, source shared publicly (see openspec/changes/public-release). Financial data: never committed, never logged.
+
+  Tech stack: Python 3.12+, uv, Make. Today: pdfplumber + pandas + DuckDB + Parquet
+  (local). Target: Databricks (Unity Catalog, Jobs, AI/BI dashboards) with raw files
+  in S3-compatible storage (MinIO) or a SharePoint folder. Jev (TypeSafe AI) classifies only rows the rules cannot.
+
+  Methodology: AI-DLC, three phases. Intent = proposal + specs + design.
+  Execution = bolts (B1, B2, ...) listed in tasks.md; disjoint-file bolts fan out
+  to parallel subagents. Operations = validation against real statements end to
+  end (every statement reconciles, totals equal the bank's), then specs and
+  memory updated.
+
+  Conventions: credentials only via environment variables or Databricks secrets;
+  .env never committed; .env.sample is the contract. Deterministic first: parsing,
+  reconciliation, rules, recurring detection, reports and dashboards are plain
+  code and SQL. AI only where rules cannot decide, behind a confidence gate.
+  Docs simple and short; README about 100 lines.

@@ -1,0 +1,33 @@
+# Master category list. Edit here; rules.yaml and Jev both use these keys.
+# type: income | expense | statutory | debt | transfer
+categories:
+  client-receipts:     {type: income,    description: "Payments received from clients or customers"}
+  founder-investment:  {type: funding,   description: "Deposits by a founder to fund operational expenses"}
+  investor-funding:    {type: funding,   description: "Funds received from an investor"}
+  interest-income:     {type: income,    description: "Bank interest credited"}
+  refunds-reversals:   {type: income,    description: "Refunds, reversals and chargebacks received"}
+  payroll-contractors: {type: expense,   description: "Salaries, stipends and payments to contractors or freelancers"}
+  payroll-employees:   {type: expense,   description: "Salaries and reimbursements of full-time employees"}
+  employee-benefits:   {type: expense,   description: "Employee health insurance and other benefits"}
+  interns:             {type: expense,   description: "Stipends and payments to interns"}
+  cloud-hosting:       {type: expense,   description: "Cloud, servers, domains and hosting (AWS, Hetzner, Hostinger, Frappe Cloud)"}
+  software-saas:       {type: expense,   description: "Software subscriptions and licences (Microsoft, Google, GitHub and similar)"}
+  ai-tools:            {type: expense,   description: "AI services such as OpenAI and Anthropic"}
+  telecom-internet:    {type: expense,   description: "Mobile, broadband and telecom bills (Airtel and similar)"}
+  office-rent-utilities: {type: expense, description: "Rent, electricity, water and office maintenance"}
+  travel-transport:    {type: expense,   description: "Metro, cab, fuel, flights and hotels"}
+  food-meals:          {type: expense,   description: "Cafes, restaurants, tea, snacks and team meals"}
+  office-supplies-equipment: {type: expense, description: "Hardware, stationery and equipment"}
+  professional-fees:   {type: expense,   description: "Accountant, legal, compliance and consulting fees"}
+  company-compliance:  {type: expense,   description: "Yearly company compliance and filing fees"}
+  gst-tds-taxes:       {type: statutory, description: "GST, TDS, PF, ESI and professional tax"}
+  loan-emi-interest:   {type: debt,      description: "Loan EMI, interest and repayments"}
+  bank-charges:        {type: expense,   description: "Bank fees, card markup, forex and other charges"}
+  operations:          {type: operations, description: "High level operations: all payments to the founder (no further split)"}
+  founder-loan-repayment: {type: debt, description: "Money the founder paid back that offsets an earlier payment to him"}
+  founder-funding:     {type: transfer,  description: "Money the founder put into the company, not matched to an earlier payment"}
+  owner-transfers:     {type: transfer,  description: "Money moved to or from a director or promoter, or between own accounts"}
+  other-expense:       {type: expense,   description: "Real spend that fits no category above"}
+  # System categories, never set by hand. Every row ends in a real category or one of these two.
+  unclassified:        {type: unclassified, description: "No rule, payee or Jev match, and low value. Safe to leave until the next cleanup"}
+  human-intervention-required: {type: review, description: "Cannot be labelled safely: high value, any unlabelled credit, or Jev unsure. Needs a person"}

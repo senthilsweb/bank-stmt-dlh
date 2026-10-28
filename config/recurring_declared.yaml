@@ -1,0 +1,13 @@
+# Sample with FICTIONAL names (they match samples/statements). Edit for your own payees.
+# Payments you know repeat but cannot be detected from the data (one a year, so
+# fewer than 3 occurrences). Each is matched on counterparty_clean | narration.
+# next_expected = last payment seen + cadence.
+declared:
+  - {name: Office rent,      match: "NORTHSTAR\\s*PROPERT",  cadence: yearly}
+  - {name: Auditor fee,      match: "AUDIT\\s*PARTNERS",     cadence: yearly}
+  - {name: Health insurance, match: "SAFEGUARD\\s*INSURANCE", cadence: yearly}
+
+# Engagements that have stopped. Their detected series is shown as "ended" and left
+# out of projections. match is a regex on counterparty_clean.
+ended:
+  - {match: "RAVI\\s*SHANKAR", note: "engagement stopped after Sep 2026"}

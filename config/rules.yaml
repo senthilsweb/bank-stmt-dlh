@@ -1,0 +1,17 @@
+# Deterministic rules, checked in order. First match wins.
+# match: case-insensitive regex tested against counterparty_clean + " | " + narration.
+# direction: optional, debit or credit.
+rules:
+  - {match: "OPENAI|ANTHROPIC|CLAUDE\\.AI",              category: ai-tools}
+  - {match: "FRAPPE|AMAZON WEB|AWS|HETZNER|HOSTINGER|GODADDY|NAMECHEAP|DIGITALOCEAN|VERCEL|CLOUDFLARE", category: cloud-hosting}
+  - {match: "MICROSOFT|GOOGLE|GITHUB|ZOOM|SLACK|NOTION|ADOBE|FIGMA|ATLASSIAN|CANVA", category: software-saas, direction: debit}
+  - {match: "AIRTEL|JIO|VODAFONE|BSNL|ACT FIBERNET", category: telecom-internet, direction: debit}
+  - {match: "BMRCL|UBER|OLA|RAPIDO|IRCTC|REDBUS|INDIGO|PETROL|FUEL", category: travel-transport, direction: debit}
+  - {match: "CAFE|COFFEE|RESTAURANT|HOTEL|TEA|SWIGGY|ZOMATO|BAKERY|FOODS|SWEETS|TEALOGY|BEVERICH", category: food-meals, direction: debit}
+  - {match: "LENSKART|AMAZON PAY|FLIPKART|CROMA|RELIANCE DIGITAL", category: office-supplies-equipment, direction: debit}
+  - {match: "GST|TDS|TRACES|EPFO|PROFESSIONAL TAX|PT AND PROF|PROF TAX|INCOME TAX", category: gst-tds-taxes, direction: debit}
+  - {match: "EMI|LOAN",                                  category: loan-emi-interest, direction: debit}
+  - {match: "INT\\.?\\s?PD|INTEREST",                    category: interest-income, direction: credit}
+  - {match: "AUDI\\s?T|AUDITOR|TOR FEES|CHARTERED|ACCOUNTANT|LEGAL|ROC FILING", category: professional-fees, direction: debit}
+  - {match: "DCC|MARKUP|SMS ALERT|BANK CHARGES|ANNUAL FEE", category: bank-charges, direction: debit}
+  - {match: "^CRV POS|REVERSAL|REFUND",                  category: refunds-reversals, direction: credit}
